@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚐 Autorickshaw Ki Duniya - Music Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --accent: #F7931E;
+            --light: #FFF5E6;
+            --dark: #1a1a1a;
+            --gold: #FFD700;
+            --pink: #FF1493;
+            --green: #00C853;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 78, 137, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Main Autorickshaw Player */
+        .player-wrapper {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FF4500 100%);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 0 3px #FFD700;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top decorative strip */
+        .player-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: repeating-linear-gradient(
+                90deg,
+                #FFD700 0px,
+                #FFD700 8px,
+                #FF1493 8px,
+                #FF1493 16px,
+                #004E89 16px,
+                #004E89 24px
+            );
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 12px;
+            background: repeating-linear-gradient(
+                90deg,
+                #004E89 0px,
+                #004E89 8px,
+                #FF1493 8px,
+                #FF1493 16px,
+                #FFD700 16px,
+                #FFD700 24px
+            );
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-main {
+            font-size: 52px;
+            font-weight: 900;
+            color: #FFF5E6;
+            text-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.4),
+                -1px -1px 0px rgba(255, 255, 255, 0.2);
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.95);
+            font-style: italic;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Now Playing Card */
+        .now-playing {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            color: var(--dark);
+            position: relative;
+            z-index: 1;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .album-art {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 25px;
+            background: linear-gradient(135deg, var(--primary), var(--accent), var(--secondary));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            box-shadow: 0 12px 30px rgba(255, 107, 53, 0.4);
+            animation: rotateArt 4s linear infinite;
+            border: 3px solid var(--gold);
+        }
+
+        .album-art.paused {
+            animation: none;
+        }
+
+        @keyframes rotateArt {
+            from { transform: rotateY(0deg) rotateX(5deg); }
+            to { transform: rotateY(360deg) rotateX(5deg); }
+        }
+
+        .song-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .song-title {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .song-artist {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .song-meta {
+            font-size: 14px;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-bottom: 25px;
+        }
+
+        .progress-time {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #e0e0e0 0%, #f0f0f0 50%, #e0e0e0 100%);
+            border-radius: 5px;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.6);
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .control-btn {
+            width: 55px;
+            height: 55px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+            border: 2px solid transparent;
+            font-weight: bold;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.15) translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+            border-color: var(--gold);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-btn {
+            width: 80px;
+            height: 80px;
+            font-size: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            box-shadow: 0 12px 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.12) translateY(-5px);
+            box-shadow: 0 16px 40px rgba(255, 107, 53, 0.6);
+        }
+
+        /* Volume Control */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .volume-slider {
+            width: 180px;
+            height: 6px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 2px solid white;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 2px solid white;
+        }
+
+        .volume-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Playlist */
+        .playlist-section {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .playlist-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 22px;
+            text-align: center;
+            color: var(--light);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .playlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .playlist::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .playlist::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 5px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .playlist-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+            border-left: 5px solid var(--gold);
+            padding: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--light);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .playlist-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(8px) translateY(-2px);
+            border-left-color: var(--pink);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .playlist-item.active {
+            background: rgba(0, 200, 83, 0.2);
+            border-left-color: var(--green);
+            box-shadow: 0 0 20px rgba(0, 200, 83, 0.4);
+            transform: translateX(5px);
+        }
+
+        .playlist-item-title {
+            font-weight: 900;
+            margin-bottom: 6px;
+            color: var(--gold);
+            font-size: 15px;
+        }
+
+        .playlist-item-artist {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 5px;
+        }
+
+        .playlist-item-duration {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+        }
+
+        /* Auto-Rickshaw Details */
+        .auto-details {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .auto-details-text {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .auto-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold), #FFB700);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 900;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .player-wrapper {
+                padding: 25px;
+            }
+
+            .title-main {
+                font-size: 38px;
+            }
+
+            .album-art {
+                width: 150px;
+                height: 150px;
+                font-size: 70px;
+            }
+
+            .playlist {
+                grid-template-columns: 1fr;
+                max-height: 350px;
+            }
+
+            .controls {
+                gap: 15px;
+            }
+
+            .play-btn {
+                width: 65px;
+                height: 65px;
+                font-size: 32px;
+            }
+
+            .control-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .player-wrapper {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        /* Info Modal */
+        .info-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 50px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .info-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-wrapper">
+            <!-- Header -->
+            <div class="header">
+                <div class="title-main">🚐 AUTORICKSHAW MUSIC 🎵</div>
+                <div class="subtitle">Classic Bollywood Hits from Mumbai's Iconic Three-Wheelers</div>
+            </div>
+
+            <!-- Now Playing -->
+            <div class="now-playing">
+                <div class="album-art" id="albumArt">🚐</div>
+
+                <div class="song-info">
+                    <div class="song-title" id="songTitle">Select a song to start your journey</div>
+                    <div class="song-artist" id="songArtist">Mumbai Autorickshaw Classics</div>
+                    <div class="song-meta" id="songMeta">🚐 Ready to roll</div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-section">
+                    <div class="progress-time">
+                        <span id="currentTime">0:00</span>
+                        <span id="duration">0:00</span>
+                    </div>
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="prevBtn" title="Previous Song">⏮️</button>
+                    <button class="control-btn play-btn" id="playBtn" title="Play/Pause">▶️</button>
+                    <button class="control-btn" id="nextBtn" title="Next Song">⏭️</button>
+                </div>
+
+                <!-- Volume Control -->
+                <div class="volume-control">
+                    <span>🔊</span>
+                    <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+                    <span class="volume-value" id="volumeValue">70%</span>
+                </div>
+            </div>
+
+            <!-- Playlist -->
+            <div class="playlist-section">
+                <div class="playlist-title">🎶 Your Mumbai Autorickshaw Playlist</div>
+                <div class="playlist" id="playlist"></div>
+
+                <div class="auto-details">
+                    <div class="auto-details-text">
+                        <strong>🚐 Sit Back, Relax & Enjoy the Ride!</strong><br>
+                        These timeless Bollywood classics echo through Mumbai's bustling streets,<br>
+                        played from countless autorickshaws carrying millions of passengers every day.
+                    </div>
+                    <span class="auto-badge">✨ MUMBAI APPROVED ✨</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        // Extended Playlist - Classic Bollywood Songs Commonly Heard in Autorickshaws
+        const playlist = [
+            {
+                title: "Chaiyya Chaiyya",
+                artist: "A.R. Rahman, Sukhwinder Singh",
+                duration: "4:13",
+                emoji: "🚂",
+                videoId: "RpKI6hCFj1c",
+                genre: "Retro Bollywood"
+            },
+            {
+                title: "Kabhi Kabhi Mere Dil Mein",
+                artist: "Mukesh",
+                duration: "5:25",
+                emoji: "💔",
+                videoId: "pHuFLn3r0eA",
+                genre: "Classic Romance"
+            },
+            {
+                title: "Yeh Hai Mera Dil",
+                artist: "Lata Mangeshkar, Kishore Kumar",
+                duration: "4:47",
+                emoji: "❤️",
+                videoId: "L8P4uaVXQAs",
+                genre: "Golden Era"
+            },
+            {
+                title: "Aaja Nachle",
+                artist: "Sunidhi Chauhan",
+                duration: "4:42",
+                emoji: "💃",
+                videoId: "qBE9L7R6t3w",
+                genre: "Bollywood Dance"
+            },
+            {
+                title: "Tum Jo Aaye",
+                artist: "Vishal Bhardwaj, Rekha Bhardwaj",
+                duration: "4:32",
+                emoji: "🌹",
+                videoId: "xqWcitMbhHI",
+                genre: "Modern Retro"
+            },
+            {
+                title: "Dil Ka Bhanwar Kare Thalii",
+                artist: "Asha Parekh, Dev Anand",
+                duration: "3:58",
+                emoji: "🎪",
+                videoId: "6bMjwNWX82o",
+                genre: "Vintage Hit"
+            },
+            {
+                title: "Mere Sapnon Ki Rani",
+                artist: "Mukesh",
+                duration: "5:12",
+                emoji: "👑",
+                videoId: "XhjQ5mXGfq0",
+                genre: "Classic Romance"
+            },
+            {
+                title: "O Meri Jaan",
+                artist: "Mohammed Rafi",
+                duration: "4:03",
+                emoji: "😍",
+                videoId: "9pJl8a6nMjU",
+                genre: "Golden Era"
+            },
+            {
+                title: "Kya Khayal Hai",
+                artist: "Shamshad Begum",
+                duration: "4:21",
+                emoji: "🎤",
+                videoId: "VEm_57eNy1I",
+                genre: "Classic Vocal"
+            },
+            {
+                title: "Piya Tose Naina",
+                artist: "Lata Mangeshkar",
+                duration: "4:55",
+                emoji: "✨",
+                videoId: "K_DM-BRgpwk",
+                genre: "Timeless"
+            },
+            {
+                title: "Akele Hain To Kya Gham Hai",
+                artist: "Mohammed Rafi",
+                duration: "4:28",
+                emoji: "🎸",
+                videoId: "OjLQ5nxHQpE",
+                genre: "Golden Oldie"
+            },
+            {
+                title: "Lag Ja Gale",
+                artist: "Lata Mangeshkar",
+                duration: "3:44",
+                emoji: "💕",
+                videoId: "NVJhDKiW5IE",
+                genre: "Classic Duet"
+            }
+        ];
+
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const playlistEl = document.getElementById('playlist');
+        const songTitle = document.getElementById('songTitle');
+        const songArtist = document.getElementById('songArtist');
+        const albumArt = document.getElementById('albumArt');
+
+        // Initialize Playlist UI
+        function initPlaylist() {
+            playlist.forEach((song, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                if (index === 0) item.classList.add('active');
+                item.innerHTML = `
+                    <div class="playlist-item-title">${song.emoji} ${song.title}</div>
+                    <div class="playlist-item-artist">${song.artist}</div>
+                    <div class="playlist-item-duration">⏱️ ${song.duration} • ${song.genre}</div>
+                `;
+                item.onclick = () => {
+                    currentSongIndex = index;
+                    loadSong(index);
+                    play();
+                };
+                playlistEl.appendChild(item);
+            });
+        }
+
+        function loadSong(index) {
+            const song = playlist[index];
+            songTitle.textContent = song.title;
+            songArtist.textContent = `${song.artist} • ${song.genre}`;
+            albumArt.textContent = song.emoji;
+
+            // Update active playlist item
+            document.querySelectorAll('.playlist-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Load audio
+            audioPlayer.src = `https://www.youtube.com/embed/${song.videoId}`;
+            console.log(`🚐 Loading: ${song.title} by ${song.artist}`);
+        }
+
+        function play() {
+            isPlaying = true;
+            playBtn.textContent = '⏸️';
+            albumArt.classList.remove('paused');
+            audioPlayer.play().catch(e => console.log('Audio play error:', e));
+            console.log(`Now playing: ${playlist[currentSongIndex].title} 🎵`);
+        }
+
+        function pause() {
+            isPlaying = false;
+            playBtn.textContent = '▶️';
+            albumArt.classList.add('paused');
+            audioPlayer.pause();
+            console.log(`Paused: ${playlist[currentSongIndex].title}`);
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % playlist.length;
+            loadSong(currentSongIndex);
+            play();
+        }
+
+        function prevSong() {
+            currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+            loadSong(currentSongIndex);
+            play();
+        }
+
+        // Event Listeners
+        playBtn.addEventListener('click', togglePlay);
+        nextBtn.addEventListener('click', nextSong);
+        prevBtn.addEventListener('click', prevSong);
+
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value;
+            volumeValue.textContent = volume + '%';
+            audioPlayer.volume = volume / 100;
+        });
+
+        // Progress Bar
+        progressBar.addEventListener('click', (e) => {
+            const percent = e.offsetX / progressBar.offsetWidth;
+            audioPlayer.currentTime = percent * audioPlayer.duration;
+        });
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (audioPlayer.duration) {
+                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressFill.style.width = percent + '%';
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            }
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        });
+
+        audioPlayer.addEventListener('ended', nextSong);
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            }
+            if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                nextSong();
+            }
+            if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                prevSong();
+            }
+        });
+
+        // Initialize
+        initPlaylist();
+        loadSong(0);
+
+        // Welcome message
+        console.log('%c🚐 Welcome to Autorickshaw Ki Duniya! 🎵', 'font-size: 20px; color: #FF6B35; font-weight: bold;');
+        console.log('%cEnjoy classic Bollywood hits from Mumbai\'s bustling streets!', 'font-size: 14px; color: #F7931E;');
+        console.log('📱 Keyboard shortcuts: Space=Play/Pause | ← →=Previous/Next');
+    </script>
+</body>
+</html>

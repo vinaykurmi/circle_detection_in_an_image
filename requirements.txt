@@ -1,0 +1,15 @@
+# Flask Backend Dependencies for Autorickshaw Music Player
+
+# Web Framework
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Optional: For enhanced features
+# gunicorn==21.2.0       # Production server
+# SQLAlchemy==2.0.23     # Database ORM
+# psycopg2-binary==2.9.9 # PostgreSQL adapter
+# redis==5.0.1           # Caching
